@@ -83,7 +83,7 @@
     "webpack-dev-server": "^3.11.0"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org"
+    "registry": "https://npm.pkg.github.com"
   },
   "jest": {
     "setupFilesAfterEnv": [
