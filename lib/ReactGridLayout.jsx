@@ -1,6 +1,6 @@
 // @flow
 import React from "react";
-
+import PropTypes from "prop-types";
 import isEqual from "lodash.isequal";
 import classNames from "classnames";
 import {
@@ -14,6 +14,8 @@ import {
   synchronizeLayoutWithChildren,
   getAllCollisions,
   compactType,
+  validateLayout,
+  nodesCollide,
   noop,
   fastRGLPropsEqual
 } from "./utils";
@@ -52,7 +54,8 @@ type State = {
   // Mirrored props
   children: ReactChildrenArray<ReactElement<any>>,
   compactType?: CompactType,
-  propsLayout?: Layout
+  propsLayout?: Layout,
+  draggingOverToolbox: boolean
 };
 
 import type { Props } from "./ReactGridLayoutPropTypes";
@@ -77,7 +80,111 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   static displayName = "ReactGridLayout";
 
   // Refactored to another module to make way for preval
-  static propTypes = ReactGridLayoutPropTypes;
+  static propTypes = {
+    //
+    // Basic props
+    //
+    className: PropTypes.string,
+    style: PropTypes.object,
+    // This can be set explicitly. If it is not set, it will automatically
+    // be set to the container width. Note that resizes will *not* cause this to adjust.
+    // If you need that behavior, use WidthProvider.
+    width: PropTypes.number,
+    // If true, the container height swells and contracts to fit contents
+    autoSize: PropTypes.bool,
+    // # of cols.
+    cols: PropTypes.number,
+    // A selector that will not be draggable.
+    draggableCancel: PropTypes.string,
+    // A selector for the draggable handler
+    draggableHandle: PropTypes.string,
+    // Deprecated
+    verticalCompact: function (props: Props) {
+      if (
+        props.verticalCompact === false &&
+        process.env.NODE_ENV !== "production"
+      ) {
+        console.warn(
+          // eslint-disable-line no-console
+          "`verticalCompact` on <ReactGridLayout> is deprecated and will be removed soon. " +
+            'Use `compactType`: "horizontal" | "vertical" | null.'
+        );
+      }
+    },
+    // Choose vertical or hotizontal compaction
+    compactType: PropTypes.oneOf(["vertical", "horizontal"]),
+    // layout is an array of object with the format:
+    // {x: Number, y: Number, w: Number, h: Number, i: String}
+    layout: function (props: Props) {
+      var layout = props.layout;
+      // I hope you're setting the data-grid property on the grid items
+      if (layout === undefined) return;
+      validateLayout(layout, "layout");
+    },
+    //
+    // Grid Dimensions
+    //
+    // Margin between items [x, y] in px
+    margin: PropTypes.arrayOf(PropTypes.number),
+    // Padding inside the container [x, y] in px
+    containerPadding: PropTypes.arrayOf(PropTypes.number),
+    // Rows have a static height, but you can change this based on breakpoints if you like
+    rowHeight: PropTypes.number,
+    // Default Infinity, but you can specify a max here if you like.
+    // Note that this isn't fully fleshed out and won't error if you specify a layout that
+    // extends beyond the row capacity. It will, however, not allow users to drag/resize
+    // an item past the barrier. They can push items beyond the barrier, though.
+    // Intentionally not documented for this reason.
+    maxRows: PropTypes.number,
+    //
+    // Flags
+    //
+    isDraggable: PropTypes.bool,
+    isResizable: PropTypes.bool,
+    // If true, grid items won't change position when being dragged over.
+    preventCollision: PropTypes.bool,
+    // Use CSS transforms instead of top/left
+    useCSSTransforms: PropTypes.bool,
+    //
+    // Callbacks
+    //
+    // Callback so you can save the layout. Calls after each drag & resize stops.
+    onLayoutChange: PropTypes.func,
+    // Calls when drag starts. Callback is of the signature (layout, oldItem, newItem, placeholder, e, ?node).
+    // All callbacks below have the same signature. 'start' and 'stop' callbacks omit the 'placeholder'.
+    onDragStart: PropTypes.func,
+    // Calls on each drag movement.
+    onDrag: PropTypes.func,
+    // Calls when drag is complete.
+    onDragStop: PropTypes.func,
+    //Calls when resize starts.
+    onResizeStart: PropTypes.func,
+    // Calls when resize movement happens.
+    onResize: PropTypes.func,
+    // Calls when resize is complete.
+    onResizeStop: PropTypes.func,
+    //
+    // Other validations
+    //
+    // Children must not have duplicate keys.
+    children: function (props: Props, propName: string) {
+      var children = props[propName];
+      // Check children keys for duplicates. Throw if found.
+      var keys = {};
+      React.Children.forEach(children, function (child) {
+        if (keys[child.key]) {
+          throw new Error(
+            'Duplicate child key "' +
+              child.key +
+              '" found! This will cause problems in ReactGridLayout.'
+          );
+        }
+        keys[child.key] = true;
+      });
+    },
+    toolbox: PropTypes.element,
+    ...ReactGridLayoutPropTypes
+  };
 
   static defaultProps = {
     autoSize: true,
@@ -130,8 +237,11 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     oldLayout: null,
     oldResizeItem: null,
     droppingDOMNode: null,
+    draggingOverToolbox: false,
     children: []
   };
+
+  toolboxRef: ?HTMLDivElement = null;
 
   dragEnterCounter = 0;
 
@@ -237,6 +347,11 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     );
   }
 
+  compactType(props: ?Object): CompactType {
+    if (!props) props = this.props;
+    return props.verticalCompact === false ? null : props.compactType;
+  }
+
   /**
    * When dragging starts
    * @param {String} i Id of the child
@@ -296,6 +411,15 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       cols
     );
 
+    if (this.toolboxRef) {
+      let draggingOverToolbox = false;
+      if (nodesCollide(node, this.toolboxRef)) {
+        placeholder = null;
+        draggingOverToolbox = true;
+      }
+      this.setState({ draggingOverToolbox });
+    }
+
     this.props.onDrag(layout, oldDragItem, l, placeholder, e, node);
 
     this.setState({
@@ -334,6 +458,15 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       cols
     );
 
+    if (this.toolboxRef) {
+      if (nodesCollide(node, this.toolboxRef)) {
+        layout = layout.filter(({ i }) => i !== l.i);
+        if (this.props.onRemoveItem) {
+          this.props.onRemoveItem(layout, oldDragItem, l, null, e, node);
+        }
+      }
+    }
+
     this.props.onDragStop(layout, oldDragItem, l, null, e, node);
 
     // Set state
@@ -343,7 +476,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       activeDrag: null,
       layout: newLayout,
       oldDragItem: null,
-      oldLayout: null
+      oldLayout: null,
+      draggingOverToolbox: false
     });
 
     this.onLayoutMaybeChanged(newLayout, oldLayout);
@@ -717,6 +851,16 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         onDragEnter={isDroppable ? this.onDragEnter : noop}
         onDragOver={isDroppable ? this.onDragOver : noop}
       >
+        {this.props.toolbox ? (
+          <div
+            className={classNames("react-grid-layout__toolbox", {
+              "is-active": this.state.draggingOverToolbox
+            })}
+            ref={elem => (this.toolboxRef = elem)}
+          >
+            {this.props.toolbox}
+          </div>
+        ) : null}
         {React.Children.map(this.props.children, child =>
           this.processGridItem(child)
         )}
