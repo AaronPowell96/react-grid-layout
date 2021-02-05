@@ -34,7 +34,7 @@ class ToolBox extends React.Component {
   }
 }
 
-export default class ToolboxLayout extends React.Component {
+class ShowcaseLayout extends React.Component {
   static defaultProps = {
     className: "layout",
     rowHeight: 30,
@@ -48,7 +48,7 @@ export default class ToolboxLayout extends React.Component {
     compactType: "vertical",
     mounted: false,
     layouts: { lg: this.props.initialLayout },
-    toolbox: { lg: [] }
+    toolbox: { lg: [] },
   };
 
   componentDidMount() {
@@ -56,12 +56,9 @@ export default class ToolboxLayout extends React.Component {
   }
 
   generateDOM() {
-    return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
+    return _.map(this.state.layouts[this.state.currentBreakpoint], function(l) {
       return (
         <div key={l.i} className={l.static ? "static" : ""}>
-          <div className="hide-button" onClick={this.onPutItem.bind(this, l)}>
-            &times;
-          </div>
           {l.static ? (
             <span
               className="text"
@@ -78,14 +75,11 @@ export default class ToolboxLayout extends React.Component {
   }
 
   onBreakpointChange = breakpoint => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       currentBreakpoint: breakpoint,
       toolbox: {
         ...prevState.toolbox,
-        [breakpoint]:
-          prevState.toolbox[breakpoint] ||
-          prevState.toolbox[prevState.currentBreakpoint] ||
-          []
+        [breakpoint]: prevState.toolbox[breakpoint] || prevState.toolbox[prevState.currentBreakpoint] || []
       }
     }));
   };
@@ -95,9 +89,7 @@ export default class ToolboxLayout extends React.Component {
     const compactType =
       oldCompactType === "horizontal"
         ? "vertical"
-        : oldCompactType === "vertical"
-        ? null
-        : "horizontal";
+        : oldCompactType === "vertical" ? null : "horizontal";
     this.setState({ compactType });
   };
 
@@ -105,35 +97,25 @@ export default class ToolboxLayout extends React.Component {
     this.setState(prevState => ({
       toolbox: {
         ...prevState.toolbox,
-        [prevState.currentBreakpoint]: prevState.toolbox[
-          prevState.currentBreakpoint
-        ].filter(({ i }) => i !== item.i)
+        [prevState.currentBreakpoint]: prevState.toolbox[prevState.currentBreakpoint].filter(({ i }) => i !== item.i)
       },
       layouts: {
         ...prevState.layouts,
-        [prevState.currentBreakpoint]: [
-          ...prevState.layouts[prevState.currentBreakpoint],
-          item
-        ]
+        [prevState.currentBreakpoint]: [...prevState.layouts[prevState.currentBreakpoint], item]
       }
     }));
   };
 
-  onPutItem = item => {
+  onPutItem = (layout, oldDragItem) => {
     this.setState(prevState => {
       return {
         toolbox: {
           ...prevState.toolbox,
-          [prevState.currentBreakpoint]: [
-            ...(prevState.toolbox[prevState.currentBreakpoint] || []),
-            item
-          ]
+          [prevState.currentBreakpoint]: [...(prevState.toolbox[prevState.currentBreakpoint] || []), oldDragItem],
         },
         layouts: {
           ...prevState.layouts,
-          [prevState.currentBreakpoint]: prevState.layouts[
-            prevState.currentBreakpoint
-          ].filter(({ i }) => i !== item.i)
+          [prevState.currentBreakpoint]: layout
         }
       };
     });
@@ -154,8 +136,10 @@ export default class ToolboxLayout extends React.Component {
     return (
       <div>
         <div>
-          Current Breakpoint: {this.state.currentBreakpoint} (
-          {this.props.cols[this.state.currentBreakpoint]} columns)
+          Current Breakpoint: {this.state.currentBreakpoint} ({
+            this.props.cols[this.state.currentBreakpoint]
+          }{" "}
+          columns)
         </div>
         <div>
           Compaction type:{" "}
@@ -166,15 +150,14 @@ export default class ToolboxLayout extends React.Component {
           Change Compaction Type
         </button>
 
-        <ToolBox
-          items={this.state.toolbox[this.state.currentBreakpoint] || []}
-          onTakeItem={this.onTakeItem}
-        />
-
         <ResponsiveReactGridLayout
           {...this.props}
           layouts={this.state.layouts}
           onBreakpointChange={this.onBreakpointChange}
+          toolbox={
+            <ToolBox items={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} />
+          }
+          onRemoveItem={this.onPutItem}
           onLayoutChange={this.onLayoutChange}
           // WidthProvider option
           measureBeforeMount={false}
@@ -191,6 +174,8 @@ export default class ToolboxLayout extends React.Component {
   }
 }
 
+module.exports = ShowcaseLayout;
+
 function generateLayout() {
   return _.map(_.range(0, 25), function(item, i) {
     var y = Math.ceil(Math.random() * 4) + 1;
@@ -205,6 +190,6 @@ function generateLayout() {
   });
 }
 
-if (process.env.STATIC_EXAMPLES === true) {
-  import("../test-hook.jsx").then(fn => fn.default(ToolboxLayout));
+if (require.main === module) {
+  require("../test-hook.jsx")(module.exports);
 }
