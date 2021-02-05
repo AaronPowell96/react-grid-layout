@@ -220,7 +220,11 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     onResizeStart: noop,
     onResize: noop,
     onResizeStop: noop,
-    onDrop: noop
+    onDrop: noop,
+    oldDragItem: null,
+    oldLayout: null,
+    oldResizeItem: null,
+    draggingOverToolbox: false
   };
 
   state: State = {
@@ -861,13 +865,21 @@ export default class ReactGridLayout extends React.Component<Props, State> {
             {this.props.toolbox}
           </div>
         ) : null}
-        {React.Children.map(this.props.children, child =>
-          this.processGridItem(child)
-        )}
-        {isDroppable &&
-          this.state.droppingDOMNode &&
-          this.processGridItem(this.state.droppingDOMNode, true)}
-        {this.placeholder()}
+        <div
+          className="react-grid-layout__grid-items"
+          style={{
+            position: "relative",
+            height: this.containerHeight()
+          }}
+        >
+          {React.Children.map(this.props.children, child =>
+            this.processGridItem(child)
+          )}
+          {isDroppable &&
+            this.state.droppingDOMNode &&
+            this.processGridItem(this.state.droppingDOMNode, true)}
+          {this.placeholder()}
+        </div>
       </div>
     );
   }
