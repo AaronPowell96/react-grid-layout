@@ -219,7 +219,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       this.props.children,
       this.props.cols,
       // Legacy support for verticalCompact: false
-      this.compactType(this.props)
+      this.compactType()
     ),
     mounted: false,
     oldDragItem: null,
@@ -358,7 +358,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       y,
       isUserAction,
       this.props.preventCollision,
-      this.compactType(this.props),
+      this.compactType(),
       cols
     );
 
@@ -374,7 +374,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.props.onDrag(layout, oldDragItem, l, placeholder, e, node);
 
     this.setState({
-      layout: compact(layout, this.compactType(this.props), cols),
+      layout: compact(layout, this.compactType(), cols),
       activeDrag: placeholder
     });
   }
@@ -403,7 +403,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       y,
       isUserAction,
       preventCollision,
-      this.compactType(this.props),
+      this.compactType(),
       cols
     );
 
@@ -419,7 +419,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.props.onDragStop(layout, oldDragItem, l, null, e, node);
 
     // Set state
-    const newLayout = compact(layout, this.compactType(this.props), cols);
+    const newLayout = compact(layout, this.compactType(), cols);
     const { oldLayout } = this.state;
     this.setState({
       activeDrag: null,
@@ -502,7 +502,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     // Re-compact the layout and set the drag placeholder.
     this.setState({
-      layout: compact(layout, this.compactType(this.props), cols),
+      layout: compact(layout, this.compactType(), cols),
       activeDrag: placeholder
     });
   }
@@ -515,7 +515,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     this.props.onResizeStop(layout, oldResizeItem, l, null, e, node);
 
     // Set state
-    const newLayout = compact(layout, this.compactType(this.props), cols);
+    const newLayout = compact(layout, this.compactType(), cols);
     const { oldLayout } = this.state;
     this.setState({
       activeDrag: null,
