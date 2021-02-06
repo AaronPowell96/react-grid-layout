@@ -17,6 +17,7 @@ import {
   getAllCollisions,
   noop
 } from "./utils";
+import { calcXY } from "./calculateUtils";
 import GridItem from "./GridItem";
 import type {
   ChildrenArray as ReactChildrenArray,
@@ -574,19 +575,39 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       maxRows,
       isDraggable,
       isResizable,
+      isBounded,
       useCSSTransforms,
+      transformScale,
       draggableCancel,
-      draggableHandle
+      draggableHandle,
+      resizeHandles,
+      resizeHandle
     } = this.props;
-    const { mounted } = this.state;
+    const { mounted, droppingPosition } = this.state;
 
-    // Parse 'static'. Any properties defined directly on the grid item will take precedence.
-    const draggable = Boolean(
-      !l.static && isDraggable && (l.isDraggable || l.isDraggable == null)
-    );
-    const resizable = Boolean(
-      !l.static && isResizable && (l.isResizable || l.isResizable == null)
-    );
+    // // Parse 'static'. Any properties defined directly on the grid item will take precedence.
+    // const draggable = Boolean(
+    //   !l.static && isDraggable && (l.isDraggable || l.isDraggable == null)
+    // );
+    // const resizable = Boolean(
+    //   !l.static && isResizable && (l.isResizable || l.isResizable == null)
+    // );
+
+    // Determine user manipulations possible.
+    // If an item is static, it can't be manipulated by default.
+    // Any properties defined directly on the grid item will take precedence.
+    const draggable =
+      typeof l.isDraggable === "boolean"
+        ? l.isDraggable
+        : !l.static && isDraggable;
+    const resizable =
+      typeof l.isResizable === "boolean"
+        ? l.isResizable
+        : !l.static && isResizable;
+    const resizeHandlesOptions = l.resizeHandles || resizeHandles;
+
+    // isBounded set on child if set on parent, and child is not explicitly false
+    const bounded = draggable && isBounded && l.isBounded !== false;
 
     return (
       <GridItem
@@ -606,8 +627,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         onResizeStop={this.onResizeStop}
         isDraggable={draggable}
         isResizable={resizable}
+        isBounded={bounded}
         useCSSTransforms={useCSSTransforms && mounted}
         usePercentages={!mounted}
+        transformScale={transformScale}
         w={l.w}
         h={l.h}
         x={l.x}
@@ -618,11 +641,135 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         maxH={l.maxH}
         maxW={l.maxW}
         static={l.static}
+        droppingPosition={isDroppingItem ? droppingPosition : undefined}
+        resizeHandles={resizeHandlesOptions}
+        resizeHandle={resizeHandle}
       >
         {child}
       </GridItem>
     );
   }
+
+  // Called while dragging an element. Part of browser native drag/drop API.
+  // Native event target might be the layout itself, or an element within the layout.
+  onDragOver = (e: DragOverEvent) => {
+    // we should ignore events from layout's children in Firefox
+    // to avoid unpredictable jumping of a dropping placeholder
+    // FIXME remove this hack
+    if (
+      isFirefox &&
+      !e.nativeEvent.target.classList.contains("react-grid-layout")
+    ) {
+      // without this Firefox will not allow drop if currently over droppingItem
+      e.preventDefault();
+      return false;
+    }
+
+    const {
+      droppingItem,
+      margin,
+      cols,
+      rowHeight,
+      maxRows,
+      width,
+      containerPadding
+    } = this.props;
+    const { layout } = this.state;
+    // This is relative to the DOM element that this event fired for.
+    const { layerX, layerY } = e.nativeEvent;
+    const droppingPosition = { left: layerX, top: layerY, e };
+
+    if (!this.state.droppingDOMNode) {
+      const positionParams: PositionParams = {
+        cols,
+        margin,
+        maxRows,
+        rowHeight,
+        containerWidth: width,
+        containerPadding: containerPadding || margin
+      };
+
+      const calculatedPosition = calcXY(
+        positionParams,
+        layerY,
+        layerX,
+        droppingItem.w,
+        droppingItem.h
+      );
+
+      this.setState({
+        droppingDOMNode: <div key={droppingItem.i} />,
+        droppingPosition,
+        layout: [
+          ...layout,
+          {
+            ...droppingItem,
+            x: calculatedPosition.x,
+            y: calculatedPosition.y,
+            static: false,
+            isDraggable: true
+          }
+        ]
+      });
+    } else if (this.state.droppingPosition) {
+      const { left, top } = this.state.droppingPosition;
+      const shouldUpdatePosition = left != layerX || top != layerY;
+      if (shouldUpdatePosition) {
+        this.setState({ droppingPosition });
+      }
+    }
+
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  removeDroppingPlaceholder = () => {
+    const { droppingItem, cols } = this.props;
+    const { layout } = this.state;
+
+    const newLayout = compact(
+      layout.filter(l => l.i !== droppingItem.i),
+      this.compactType(this.props),
+      cols
+    );
+
+    this.setState({
+      layout: newLayout,
+      droppingDOMNode: null,
+      activeDrag: null,
+      droppingPosition: undefined
+    });
+  };
+
+  onDragLeave = () => {
+    this.dragEnterCounter--;
+
+    // onDragLeave can be triggered on each layout's child.
+    // But we know that count of dragEnter and dragLeave events
+    // will be balanced after leaving the layout's container
+    // so we can increase and decrease count of dragEnter and
+    // when it'll be equal to 0 we'll remove the placeholder
+    if (this.dragEnterCounter === 0) {
+      this.removeDroppingPlaceholder();
+    }
+  };
+
+  onDragEnter = () => {
+    this.dragEnterCounter++;
+  };
+
+  onDrop = (e: Event) => {
+    const { droppingItem } = this.props;
+    const { layout } = this.state;
+    const item = layout.find(l => l.i === droppingItem.i);
+
+    // reset dragEnter counter on drop
+    this.dragEnterCounter = 0;
+
+    this.removeDroppingPlaceholder();
+
+    this.props.onDrop(layout, item, e);
+  };
 
   render() {
     const mergedClassName = classNames(
