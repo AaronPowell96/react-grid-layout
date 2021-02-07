@@ -53,6 +53,7 @@ type Props<Breakpoint: string = string> = {|
   breakpoints: Breakpoints<Breakpoint>,
   cols: { [key: Breakpoint]: number },
   layouts: ResponsiveLayout<Breakpoint>,
+  toolboxItems: ResponsiveLayout<Breakpoint>,
   width: number,
   margin: { [key: Breakpoint]: [number, number] } | [number, number],
   /* prettier-ignore */
@@ -121,6 +122,23 @@ export default class ResponsiveReactGridLayout extends React.Component<
       });
     },
 
+    toolboxItems(props: Props<>, propName: string) {
+      if (type(props[propName]) !== "[object Object]") {
+        throw new Error(
+          "Toolbox Items property must be an object. Received: " +
+            type(props[propName])
+        );
+      }
+      Object.keys(props[propName]).forEach(key => {
+        if (!(key in props.breakpoints)) {
+          throw new Error(
+            "Each key in the toolbox must align with a key in breakpoints."
+          );
+        }
+        validateLayout(props.layouts[key], "toolboxItems." + key);
+      });
+    },
+
     // The width of this component.
     // Required in this propTypes stanza because generateInitialState() will fail without it.
     width: PropTypes.number.isRequired,
@@ -144,6 +162,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
     breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
     cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
     layouts: {},
+    toolboxItems: {},
     margin: [10, 10],
     containerPadding: { lg: null, md: null, sm: null, xs: null, xxs: null },
     onBreakpointChange: noop,
@@ -154,7 +173,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
   state = this.generateInitialState();
 
   generateInitialState(): State {
-    const { width, breakpoints, layouts, cols } = this.props;
+    const { width, breakpoints, layouts, cols, toolboxItems } = this.props;
     const breakpoint = getBreakpointFromWidth(breakpoints, width);
     const colNo = getColsFromBreakpoint(breakpoint, cols);
     // verticalCompact compatibility, now deprecated
@@ -169,7 +188,8 @@ export default class ResponsiveReactGridLayout extends React.Component<
       breakpoint,
       breakpoint,
       colNo,
-      compactType
+      compactType,
+      toolboxItems
     );
 
     return {
@@ -192,7 +212,8 @@ export default class ResponsiveReactGridLayout extends React.Component<
         breakpoint,
         breakpoint,
         cols,
-        nextProps.compactType
+        nextProps.compactType,
+        nextProps.toolboxItems
       );
       return { layout: newLayout, layouts: nextProps.layouts };
     }
@@ -225,7 +246,13 @@ export default class ResponsiveReactGridLayout extends React.Component<
    * Width changes are necessary to figure out the widget widths.
    */
   onWidthChange(prevProps: Props<*>) {
-    const { breakpoints, cols, layouts, compactType } = this.props;
+    const {
+      breakpoints,
+      cols,
+      layouts,
+      compactType,
+      toolboxItems
+    } = this.props;
     const newBreakpoint =
       this.props.breakpoint ||
       getBreakpointFromWidth(this.props.breakpoints, this.props.width);
@@ -240,11 +267,14 @@ export default class ResponsiveReactGridLayout extends React.Component<
       prevProps.breakpoints !== breakpoints ||
       prevProps.cols !== cols
     ) {
+      console.log("BREAKPOINT CHANGED:", lastBreakpoint, newBreakpoint);
+
+      console.log("LAYOUTS BEFORE MERGE", newLayouts);
       // Preserve the current layout if the current breakpoint is not present in the next layouts.
       if (!(lastBreakpoint in newLayouts))
         newLayouts[lastBreakpoint] = cloneLayout(this.state.layout);
 
-      console.log("WIDTH CHANGE NEW LAYOUTS", newLayouts);
+      console.log("LAYOUT AFTER MERGE CLONE", newLayouts);
       // Find or generate a new layout.
       let layout = findOrGenerateResponsiveLayout(
         newLayouts,
@@ -252,8 +282,11 @@ export default class ResponsiveReactGridLayout extends React.Component<
         newBreakpoint,
         lastBreakpoint,
         newCols,
-        compactType
+        compactType,
+        toolboxItems
       );
+
+      console.log("LAYOUT AFTER GENERATE");
 
       // This adds missing items.
       layout = synchronizeLayoutWithChildren(
