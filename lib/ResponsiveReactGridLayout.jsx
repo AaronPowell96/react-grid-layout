@@ -162,6 +162,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
       this.props.verticalCompact === false ? null : this.props.compactType;
     // Get the initial layout. This can tricky; we try to generate one however possible if one doesn't exist
     // for this layout.
+    console.log("INITIAL STATE LAYOUTS", layouts, breakpoint);
     const initialLayout = findOrGenerateResponsiveLayout(
       layouts,
       breakpoints,
@@ -243,6 +244,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
       if (!(lastBreakpoint in newLayouts))
         newLayouts[lastBreakpoint] = cloneLayout(this.state.layout);
 
+      console.log("WIDTH CHANGE NEW LAYOUTS", newLayouts);
       // Find or generate a new layout.
       let layout = findOrGenerateResponsiveLayout(
         newLayouts,
@@ -305,7 +307,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
       ...other
     } = this.props;
     /* eslint-enable no-unused-vars */
-
+    console.log("layout provided to grid", this.state.layout);
     return (
       <ReactGridLayout
         {...other}
