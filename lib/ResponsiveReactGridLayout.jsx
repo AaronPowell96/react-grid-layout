@@ -289,6 +289,14 @@ export default class ResponsiveReactGridLayout extends React.Component<
 
       console.log("LAYOUT AFTER GENERATE", layout);
 
+      console.log(
+        "BEFORE SYNC TOOLBOX ITEMS",
+        toolboxItems,
+        "bp",
+        newBreakpoint,
+        "toolbox at bp",
+        toolboxItems[newBreakpoint]
+      );
       // This adds missing items.
       layout = synchronizeLayoutWithChildren(
         layout,
@@ -352,6 +360,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
           this.state.breakpoint
         )}
         onLayoutChange={this.onLayoutChange}
+        toolboxItems={this.props.toolboxItems[breakpoint]}
         layout={this.state.layout}
         cols={this.state.cols}
       />

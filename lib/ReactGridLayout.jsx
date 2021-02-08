@@ -219,7 +219,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       this.props.children,
       this.props.cols,
       // Legacy support for verticalCompact: false
-      this.compactType()
+      this.compactType(),
+      this.props.toolboxItems
     ),
     mounted: false,
     oldDragItem: null,
@@ -272,7 +273,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         newLayoutBase,
         nextProps.children,
         nextProps.cols,
-        this.compactType(nextProps)
+        this.compactType(nextProps),
+        this.props.toolboxItems
       );
       const oldLayout = this.state.layout;
       this.setState({ layout: newLayout });
