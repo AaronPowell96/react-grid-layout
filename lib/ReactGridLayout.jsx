@@ -246,6 +246,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    console.log("NON RESPONSIVE ONE LOADED");
     this.setState({ mounted: true });
     // Possibly call back with layout on mount. This should be done after correcting the layout width
     // to ensure we don't rerender with the wrong width.
@@ -258,38 +259,52 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // Allow parent to set layout directly.
     if (
       !isEqual(nextProps.layout, this.props.layout) ||
-      nextProps.compactType !== this.props.compactType
+      nextProps.compactType !== this.props.compactType ||
+      !isEqual(nextProps.toolboxItems, this.props.toolboxItems)
     ) {
+      console.log("will receive props, PROPS not EQUAL");
       newLayoutBase = nextProps.layout;
     } else if (!childrenEqual(this.props.children, nextProps.children)) {
       // If children change, also regenerate the layout. Use our state
       // as the base in case because it may be more up to date than
       // what is in props.
+      console.log("will receive props, CHILDREN not EQUAL");
       newLayoutBase = this.state.layout;
     }
 
-    // We need to regenerate the layout.
-    if (newLayoutBase) {
-      console.log(
-        "NEW BASE LAYOUT CALLING SYNC WITH LAYOUT",
-        newLayoutBase,
-        "toolboxitems next",
-        nextProps.toolboxItems,
-        "prev toolbox items",
-        this.props.toolboxItems
-      );
-      const newLayout = synchronizeLayoutWithChildren(
-        newLayoutBase,
-        nextProps.children,
-        nextProps.cols,
-        this.compactType(nextProps),
-        nextProps.toolboxItems
-      );
-      console.log("NEW LAYOUT AFTER SYNC IN RECEIVE PROPS", newLayout);
-      const oldLayout = this.state.layout;
-      this.setState({ layout: newLayout });
-      this.onLayoutMaybeChanged(newLayout, oldLayout);
-    }
+    console.log(
+      "WILL RECEIVE PROPS, NEW LAYOUT",
+      newLayoutBase,
+      "OLD LAYOUT",
+      this.state.layout
+    );
+
+    const oldLayout = this.state.layout;
+    this.setState({ layout: newLayoutBase });
+    this.onLayoutMaybeChanged(newLayoutBase, oldLayout);
+
+    // // We need to regenerate the layout.
+    // if (newLayoutBase) {
+    //   console.log(
+    //     "NEW BASE LAYOUT CALLING SYNC WITH LAYOUT",
+    //     newLayoutBase,
+    //     "toolboxitems next",
+    //     nextProps.toolboxItems,
+    //     "prev toolbox items",
+    //     this.props.toolboxItems
+    //   );
+    //   const newLayout = synchronizeLayoutWithChildren(
+    //     newLayoutBase,
+    //     nextProps.children,
+    //     nextProps.cols,
+    //     this.compactType(nextProps),
+    //     nextProps.toolboxItems
+    //   );
+    //   console.log("NEW LAYOUT AFTER SYNC IN RECEIVE PROPS", newLayout);
+    //   const oldLayout = this.state.layout;
+    //   this.setState({ layout: newLayout });
+    //   this.onLayoutMaybeChanged(newLayout, oldLayout);
+    // }
   }
 
   /**

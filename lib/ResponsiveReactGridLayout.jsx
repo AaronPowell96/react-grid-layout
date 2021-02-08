@@ -135,7 +135,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
             "Each key in the toolbox must align with a key in breakpoints."
           );
         }
-        validateLayout(props.layouts[key], "toolboxItems." + key);
+        validateLayout(props.toolboxItems[key], "toolboxItems." + key);
       });
     },
 
@@ -206,6 +206,13 @@ export default class ResponsiveReactGridLayout extends React.Component<
 
       // Since we're setting an entirely new layout object, we must generate a new responsive layout
       // if one does not exist.
+
+      console.log(
+        "DERIVED STATE FROM PROPS LAYOUTS:",
+        nextProps.layouts,
+        "next toolbox items",
+        nextProps.toolboxItems
+      );
       const newLayout = findOrGenerateResponsiveLayout(
         nextProps.layouts,
         nextProps.breakpoints,
@@ -215,10 +222,14 @@ export default class ResponsiveReactGridLayout extends React.Component<
         nextProps.compactType,
         nextProps.toolboxItems
       );
+      console.log("DERIVED FROM STATE NEW LAYOUT AFTER FIND OR GEN", newLayout);
       return { layout: newLayout, layouts: nextProps.layouts };
     }
 
     return null;
+  }
+  componentDidMount() {
+    console.log("RRRRRESPONSIVE ONE LOADED");
   }
 
   componentDidUpdate(prevProps: Props<*>) {
@@ -276,6 +287,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
         newLayouts[lastBreakpoint] = cloneLayout(this.state.layout);
 
       console.log("LAYOUT AFTER MERGE CLONE", newLayouts);
+      console.log("break point change toolbox items provided", toolboxItems);
       // Find or generate a new layout.
       let layout = findOrGenerateResponsiveLayout(
         newLayouts,
@@ -350,7 +362,8 @@ export default class ResponsiveReactGridLayout extends React.Component<
       ...other
     } = this.props;
     /* eslint-enable no-unused-vars */
-    console.log("layout provided to grid", this.state.layout);
+    console.log("layout provided to core grid", this.state.layout);
+    console.log("toolboxItems provided to core grid", this.props.toolboxItems);
     return (
       <ReactGridLayout
         {...other}
