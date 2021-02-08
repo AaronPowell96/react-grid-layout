@@ -286,7 +286,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
         toolboxItems
       );
 
-      console.log("LAYOUT AFTER GENERATE");
+      console.log("LAYOUT AFTER GENERATE", layout);
 
       // This adds missing items.
       layout = synchronizeLayoutWithChildren(
