@@ -234,6 +234,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
   }
 
   // wrap layouts so we do not need to pass layouts to child
+  // throw tooolbox items in here when modified by generation?
   onLayoutChange = (layout: Layout) => {
     this.props.onLayoutChange(layout, {
       ...this.props.layouts,
@@ -293,7 +294,8 @@ export default class ResponsiveReactGridLayout extends React.Component<
         layout,
         this.props.children,
         newCols,
-        compactType
+        compactType,
+        toolboxItems[newBreakpoint]
       );
 
       // Store the new layout.
