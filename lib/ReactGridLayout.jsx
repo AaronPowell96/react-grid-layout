@@ -186,6 +186,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     rowHeight: 150,
     maxRows: Infinity, // infinite vertical growth
     layout: [],
+    toolboxItems: [],
     margin: [10, 10],
     isBounded: false,
     isDraggable: true,
@@ -274,7 +275,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         nextProps.children,
         nextProps.cols,
         this.compactType(nextProps),
-        this.props.toolboxItems
+        nextProps.toolboxItems
       );
       const oldLayout = this.state.layout;
       this.setState({ layout: newLayout });
