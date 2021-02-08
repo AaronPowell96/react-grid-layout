@@ -270,6 +270,14 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     // We need to regenerate the layout.
     if (newLayoutBase) {
+      console.log(
+        "NEW BASE LAYOUT CALLING SYNC WITH LAYOUT",
+        newLayoutBase,
+        "toolboxitems next",
+        nextProps.toolboxItems,
+        "prev toolbox items",
+        this.props.toolboxItems
+      );
       const newLayout = synchronizeLayoutWithChildren(
         newLayoutBase,
         nextProps.children,
@@ -277,6 +285,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         this.compactType(nextProps),
         nextProps.toolboxItems
       );
+      console.log("NEW LAYOUT AFTER SYNC IN RECEIVE PROPS", newLayout);
       const oldLayout = this.state.layout;
       this.setState({ layout: newLayout });
       this.onLayoutMaybeChanged(newLayout, oldLayout);
