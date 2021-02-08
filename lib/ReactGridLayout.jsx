@@ -10,6 +10,7 @@ import {
   childrenEqual,
   cloneLayoutItem,
   compact,
+  correctBounds,
   getLayoutItem,
   moveElement,
   synchronizeLayoutWithChildren,
@@ -279,6 +280,16 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       this.state.layout
     );
     if (newLayoutBase) {
+      if (nextProps.compactType !== this.props.compactType) {
+        const corrected = correctBounds(newLayoutBase, {
+          cols: nextProps.cols
+        });
+        newLayoutBase = compact(
+          corrected,
+          nextProps.compactType,
+          nextProps.cols
+        );
+      }
       const oldLayout = this.state.layout;
       this.setState({ layout: newLayoutBase });
       this.onLayoutMaybeChanged(newLayoutBase, oldLayout);

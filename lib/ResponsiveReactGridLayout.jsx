@@ -228,9 +228,6 @@ export default class ResponsiveReactGridLayout extends React.Component<
 
     return null;
   }
-  componentDidMount() {
-    console.log("RRRRRESPONSIVE ONE LOADED");
-  }
 
   componentDidUpdate(prevProps: Props<*>) {
     // Allow parent to set width or breakpoint directly.
