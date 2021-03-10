@@ -181,7 +181,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
       this.props.verticalCompact === false ? null : this.props.compactType;
     // Get the initial layout. This can tricky; we try to generate one however possible if one doesn't exist
     // for this layout.
-    console.log("INITIAL STATE LAYOUTS", layouts, breakpoint);
+    // console.log("INITIAL STATE LAYOUTS", layouts, breakpoint);
     const initialLayout = findOrGenerateResponsiveLayout(
       layouts,
       breakpoints,
@@ -207,12 +207,12 @@ export default class ResponsiveReactGridLayout extends React.Component<
       // Since we're setting an entirely new layout object, we must generate a new responsive layout
       // if one does not exist.
 
-      console.log(
-        "DERIVED STATE FROM PROPS LAYOUTS:",
-        nextProps.layouts,
-        "next toolbox items",
-        nextProps.toolboxItems
-      );
+      // console.log(
+      //   "DERIVED STATE FROM PROPS LAYOUTS:",
+      //   nextProps.layouts,
+      //   "next toolbox items",
+      //   nextProps.toolboxItems
+      // );
       const newLayout = findOrGenerateResponsiveLayout(
         nextProps.layouts,
         nextProps.breakpoints,
@@ -222,7 +222,7 @@ export default class ResponsiveReactGridLayout extends React.Component<
         nextProps.compactType,
         nextProps.toolboxItems
       );
-      console.log("DERIVED FROM STATE NEW LAYOUT AFTER FIND OR GEN", newLayout);
+      // console.log("DERIVED FROM STATE NEW LAYOUT AFTER FIND OR GEN", newLayout);
       return { layout: newLayout, layouts: nextProps.layouts };
     }
 
@@ -276,15 +276,15 @@ export default class ResponsiveReactGridLayout extends React.Component<
       prevProps.breakpoints !== breakpoints ||
       prevProps.cols !== cols
     ) {
-      console.log("BREAKPOINT CHANGED:", lastBreakpoint, newBreakpoint);
+      //console.log("BREAKPOINT CHANGED:", lastBreakpoint, newBreakpoint);
 
-      console.log("LAYOUTS BEFORE MERGE", newLayouts);
+      // console.log("LAYOUTS BEFORE MERGE", newLayouts);
       // Preserve the current layout if the current breakpoint is not present in the next layouts.
       if (!(lastBreakpoint in newLayouts))
         newLayouts[lastBreakpoint] = cloneLayout(this.state.layout);
 
-      console.log("LAYOUT AFTER MERGE CLONE", newLayouts);
-      console.log("break point change toolbox items provided", toolboxItems);
+      //console.log("LAYOUT AFTER MERGE CLONE", newLayouts);
+      // console.log("break point change toolbox items provided", toolboxItems);
       // Find or generate a new layout.
       let layout = findOrGenerateResponsiveLayout(
         newLayouts,
@@ -296,16 +296,16 @@ export default class ResponsiveReactGridLayout extends React.Component<
         toolboxItems
       );
 
-      console.log("LAYOUT AFTER GENERATE", layout);
+      // console.log("LAYOUT AFTER GENERATE", layout);
 
-      console.log(
-        "BEFORE SYNC TOOLBOX ITEMS",
-        toolboxItems,
-        "bp",
-        newBreakpoint,
-        "toolbox at bp",
-        toolboxItems[newBreakpoint]
-      );
+      // console.log(
+      //   "BEFORE SYNC TOOLBOX ITEMS",
+      //   toolboxItems,
+      //   "bp",
+      //   newBreakpoint,
+      //   "toolbox at bp",
+      //   toolboxItems[newBreakpoint]
+      // );
       // This adds missing items.
       layout = synchronizeLayoutWithChildren(
         layout,
@@ -359,8 +359,8 @@ export default class ResponsiveReactGridLayout extends React.Component<
       ...other
     } = this.props;
     /* eslint-enable no-unused-vars */
-    console.log("layout provided to core grid", this.state.layout);
-    console.log("toolboxItems provided to core grid", this.props.toolboxItems);
+    // console.log("layout provided to core grid", this.state.layout);
+    // console.log("toolboxItems provided to core grid", this.props.toolboxItems);
     return (
       <ReactGridLayout
         {...other}

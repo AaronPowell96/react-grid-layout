@@ -68,7 +68,7 @@ export default class AddRemoveLayout extends React.PureComponent {
 
   onAddItem() {
     /*eslint no-console: 0*/
-    console.log("adding", "n" + this.state.newCounter);
+    // console.log("adding", "n" + this.state.newCounter);
     this.setState({
       // Add a new item. It must have a unique key!
       items: this.state.items.concat({
@@ -97,7 +97,7 @@ export default class AddRemoveLayout extends React.PureComponent {
   }
 
   onRemoveItem(i) {
-    console.log("removing", i);
+    // console.log("removing", i);
     this.setState({ items: _.reject(this.state.items, { i: i }) });
   }
 
