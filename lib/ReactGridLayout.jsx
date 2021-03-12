@@ -624,7 +624,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     child: ReactElement<any>,
     isDroppingItem?: boolean
   ): ?ReactElement<any> {
-    console.log("called process grid item", child);
+    console.log("called process grid item", child, this.props.toolboxItems);
     if (!child || !child.key) return;
     let isInToolbox = false;
     if (this.props.toolboxItems) {
