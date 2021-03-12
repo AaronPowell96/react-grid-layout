@@ -629,6 +629,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     let isInToolbox = false;
     if (this.props.toolboxItems) {
       for (const item of this.props.toolboxItems) {
+        console.log("loopingitem process grid", item.i);
         if (item.i === `${child.key}`) {
           console.log(
             "founddddddd while processing removing:",
@@ -641,7 +642,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       }
     }
     if (isInToolbox) {
-      return;
+      return null;
     }
     const l = getLayoutItem(this.state.layout, String(child.key));
     if (!l) return null;
