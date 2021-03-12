@@ -281,14 +281,14 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // );
     if (newLayoutBase) {
       if (nextProps.compactType !== this.props.compactType) {
-        const corrected = correctBounds(newLayoutBase, {
-          cols: nextProps.cols
-        });
         newLayoutBase = compact(
-          corrected,
+          newLayoutBase,
           nextProps.compactType,
           nextProps.cols
         );
+        newLayoutBase = correctBounds(newLayoutBase, {
+          cols: nextProps.cols
+        });
       }
       const oldLayout = this.state.layout;
       this.setState({ layout: newLayoutBase });
