@@ -247,7 +247,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    ("NON RESPONSIVE ONE LOADED");
+    console.log("NON RESPONSIVE ONE LOADED");
     this.setState({ mounted: true });
     // Possibly call back with layout on mount. This should be done after correcting the layout width
     // to ensure we don't rerender with the wrong width.
@@ -281,16 +281,24 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     // );
     if (newLayoutBase) {
       if (nextProps.compactType !== this.props.compactType) {
+        const corrected = correctBounds(newLayoutBase, {
+          cols: nextProps.cols
+        });
         newLayoutBase = compact(
-          newLayoutBase,
+          corrected,
           nextProps.compactType,
           nextProps.cols
         );
-        newLayoutBase = correctBounds(newLayoutBase, {
-          cols: nextProps.cols
-        });
       }
       const oldLayout = this.state.layout;
+
+      newLayoutBase = synchronizeLayoutWithChildren(
+        newLayoutBase,
+        nextProps.children,
+        nextProps.cols,
+        this.compactType(nextProps),
+        nextProps.toolboxItems
+      );
       this.setState({ layout: newLayoutBase });
       this.onLayoutMaybeChanged(newLayoutBase, oldLayout);
     }
@@ -617,6 +625,23 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     isDroppingItem?: boolean
   ): ?ReactElement<any> {
     if (!child || !child.key) return;
+    let isInToolbox = false;
+    if (this.props.toolboxItems[this.props.breakpoint]) {
+      for (const item of this.props.toolboxItems[this.props.breakpoint]) {
+        if (item.i === `${child.key}`) {
+          console.log(
+            "founddddddd while processing removing:",
+            item.i,
+            child.key
+          );
+          isInToolbox = true;
+          return;
+        }
+      }
+    }
+    if (isInToolbox) {
+      return;
+    }
     const l = getLayoutItem(this.state.layout, String(child.key));
     if (!l) return null;
     const {
