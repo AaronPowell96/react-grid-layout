@@ -245,6 +245,18 @@ export default class ResponsiveReactGridLayout extends React.Component<
   // wrap layouts so we do not need to pass layouts to child
   // throw tooolbox items in here when modified by generation?
   onLayoutChange = (layout: Layout) => {
+    layout = cloneLayout(layout).reduce((acc, current) => {
+      const items = this.props.toolboxItems[this.state.breakpoint];
+      if (items) {
+        for (const item of items || []) {
+          // console.log("inside toolbox loop", item.i, current.i);
+          if (item.i === current.i) {
+            return acc;
+          }
+        }
+      }
+      return [...acc, current];
+    }, []);
     this.props.onLayoutChange(layout, {
       ...this.props.layouts,
       [this.state.breakpoint]: layout

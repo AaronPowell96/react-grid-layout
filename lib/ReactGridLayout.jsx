@@ -624,10 +624,11 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     child: ReactElement<any>,
     isDroppingItem?: boolean
   ): ?ReactElement<any> {
+    console.log("called process grid item", child);
     if (!child || !child.key) return;
     let isInToolbox = false;
-    if (this.props.toolboxItems[this.props.breakpoint]) {
-      for (const item of this.props.toolboxItems[this.props.breakpoint]) {
+    if (this.props.toolboxItems) {
+      for (const item of this.props.toolboxItems) {
         if (item.i === `${child.key}`) {
           console.log(
             "founddddddd while processing removing:",
