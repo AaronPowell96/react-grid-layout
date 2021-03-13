@@ -247,7 +247,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    ("NON RESPONSIVE ONE LOADED");
+    console.log("NON RESPONSIVE ONE LOADED");
     this.setState({ mounted: true });
     // Possibly call back with layout on mount. This should be done after correcting the layout width
     // to ensure we don't rerender with the wrong width.
@@ -291,6 +291,14 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         );
       }
       const oldLayout = this.state.layout;
+
+      // newLayoutBase = synchronizeLayoutWithChildren(
+      //   newLayoutBase,
+      //   nextProps.children,
+      //   nextProps.cols,
+      //   this.compactType(nextProps),
+      //   nextProps.toolboxItems
+      // );
       this.setState({ layout: newLayoutBase });
       this.onLayoutMaybeChanged(newLayoutBase, oldLayout);
     }
@@ -616,7 +624,30 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     child: ReactElement<any>,
     isDroppingItem?: boolean
   ): ?ReactElement<any> {
+    console.log(
+      "called process grid item",
+      child,
+      this.props.toolboxItems && this.props.toolboxItems
+    );
     if (!child || !child.key) return;
+    let isInToolbox = false;
+    if (this.props.toolboxItems) {
+      for (const item of this.props.toolboxItems) {
+        console.log("loopingitem process grid", item.i);
+        if (item.i === `${child.key}`) {
+          console.log(
+            "founddddddd while processing removing:",
+            item.i,
+            child.key
+          );
+          isInToolbox = true;
+          return;
+        }
+      }
+    }
+    if (isInToolbox) {
+      return null;
+    }
     const l = getLayoutItem(this.state.layout, String(child.key));
     if (!l) return null;
     const {
